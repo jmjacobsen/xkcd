@@ -1,3 +1,5 @@
+Vue.component('star-rating', VueStarRating.default);
+
 let app = new Vue({
     el: '#app',
     data: {
@@ -12,6 +14,8 @@ let app = new Vue({
         addedName: '',
         addedComment: '',
         comments: {},
+        ratings: {},
+        averageRating: {},
     },
     created() {
         this.xkcd();
@@ -36,7 +40,14 @@ let app = new Vue({
             month[10] = "November";
             month[11] = "December";
             return month[this.current.month - 1];
-        }
+        },
+        calcAverageRating(){
+            if (!(this.number in this.ratings)) {
+                return 0;
+            }
+            let average = this.ratings[this.number].sum / this.ratings[this.number].total;
+            return average;
+        },
     },
     watch: {
         number(value, oldvalue) {
@@ -63,12 +74,16 @@ let app = new Vue({
                 this.number = response.data.num;
             } catch (error) {
                 console.log(error);
+                this.number = this.max;
             }
         },
         getRandom(min, max) {
             min = Math.ceil(min);
             max = Math.floor(max);
             return Math.floor(Math.random() * (max - min + 1)) + min; //The maximum and minimum are inclusive
+        },
+        firstComic() {
+            this.number = 1;
         },
         randomComic() {
             this.number = this.getRandom(1, this.max);
@@ -81,20 +96,34 @@ let app = new Vue({
         nextComic() {
             this.number = this.current.num + 1;
             if (this.number > this.max)
-                this.number = this.max
+                this.number = this.num
+        },
+        lastComic() {
+            this.number = this.max;
         },
         addComment() {
             if (!(this.number in this.comments))
                 Vue.set(app.comments, this.number, new Array);
             this.comments[this.number].push({
                 author: this.addedName,
-                text: this.addedComment
+                text: this.addedComment,
+                date: moment().format('LLL')
             });
             this.addedName = '';
             this.addedComment = '';
         },
+        setRating(rating){
+            alert(rating)
+            if (!(this.number in this.ratings))
+                Vue.set(this.ratings, this.number, {
+                    sum: 0,
+                    total: 0
+                });
+            this.ratings[this.number].sum += rating;
+            this.ratings[this.number].total += 1;
+        },
+
 
     }
-}).catch(error => {
-    this.number = this.max;
-});
+})
+
